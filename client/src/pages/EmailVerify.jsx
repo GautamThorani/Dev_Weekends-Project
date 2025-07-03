@@ -47,20 +47,29 @@ const handlePaste = (e) => {
 const onSubmitHandle = async (e) => {
     try {
         e.preventDefault();
-        const otpArray = inputRefs.current.map(e => e.value)
-        const otp = otpArray.join('')
+        const otpArray = inputRefs.current.map(e => e.value);
+        const otp = otpArray.join('');
 
-        const {data} = await axios.post(backendUrl + '/api/auth/verify-account', {otp})
+        if (otp.length !== 6) {
+            toast.error('Please enter a 6-digit OTP');
+            return;
+        }
+
+        const {data} = await axios.post(backendUrl + '/api/auth/verify-email', {otp});
 
         if(data.success){
-            toast.success(data.message)
-            getUserData()
-            navigate('/')
+            toast.success(data.message);
+            getUserData();
+            navigate('/');
         } else {
-            toast.error(data.message)
+            toast.error(data.message);
+            // Clear inputs on failure
+            inputRefs.current.forEach(input => input.value = '');
+            inputRefs.current[0]?.focus();
         }
     } catch (error) {
-        toast.error(error.message)
+        toast.error(error.response?.data?.message || error.message);
+        console.error('Verification error:', error);
     }
 }
 
